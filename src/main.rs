@@ -1,11 +1,11 @@
 #[cfg(target_os = "windows")]
+use std::env;
+#[cfg(target_os = "windows")]
 use std::env::args;
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 #[cfg(target_os = "windows")]
 use std::process::{Command, Stdio};
-#[cfg(target_os = "windows")]
-use std::env;
 
 #[cfg(target_os = "linux")]
 use daemonize::Daemonize;
@@ -54,13 +54,12 @@ fn main() {
     match daemon.start() {
         Ok(_) => {
             let args: Vec<String> = std::env::args().collect();
-            // 在后台执行某个命令
-            let pid: u32 = args[1].parse().expect("pid必须是正整数");
+            let pid: u32 = args[1].parse().expect("pid must be positive integers!");
             let duration: u64 = core::parse_duration(args[2].as_str()).unwrap();
             core::still(pid, duration)
         }
         Err(e) => {
-            eprintln!("启动守护进程失败: {}", e);
+            eprintln!("failed to start daemon process: {}", e);
         }
     }
 }

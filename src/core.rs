@@ -37,7 +37,7 @@ fn resume_process(pid: u32) -> bool {
     if suspend_status != 0 {
         return false;
     }
-    println!("进程 {} 已成功恢复", pid);
+    println!("Process {} has been resumed successfully!", pid);
     return true;
 }
 
@@ -87,8 +87,10 @@ pub fn still(pid: u32, seconds: u64) {
 #[cfg(target_os = "windows")]
 fn main() {
     let args: Vec<String> = args().collect();
-    let pid = args[1].parse::<u32>().expect("输入pid错误！");
-    let secs = parse_duration(args[2].as_str()).expect("解析时间错误！");
+    let pid = args[1]
+        .parse::<u32>()
+        .expect("pid must be a positive integer!");
+    let secs = parse_duration(args[2].as_str()).expect("uncorrect duration input!");
     still(pid, secs);
 }
 
