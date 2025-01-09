@@ -4,6 +4,8 @@ use std::env::args;
 use std::os::windows::process::CommandExt;
 #[cfg(target_os = "windows")]
 use std::process::{Command, Stdio};
+#[cfg(target_os = "windows")]
+use std::env;
 
 #[cfg(target_os = "linux")]
 use daemonize::Daemonize;
@@ -21,7 +23,9 @@ fn main() {
     const CREATE_NO_WINDOW: u32 = 0x08000000;
 
     let args: Vec<String> = args().collect();
-    let child = Command::new("target/release/core.exe")
+    let exe_path = env::current_exe().unwrap();
+    let exe_dir = exe_path.parent().unwrap();
+    Command::new(format!(r"{}/core.exe", exe_dir.display()))
         .arg(args[1].as_str())
         .arg(args[2].as_str())
         .stdout(Stdio::null())
@@ -31,7 +35,6 @@ fn main() {
         .creation_flags(CREATE_NO_WINDOW)
         .spawn()
         .expect("Failed to spawn child process");
-    println!("Child process ID: {}", child.id());
 }
 
 #[cfg(target_os = "linux")]

@@ -91,3 +91,6 @@ fn main() {
     let secs = parse_duration(args[2].as_str()).expect("解析时间错误！");
     still(pid, secs);
 }
+
+#[cfg(target_os = "linux")]
+fn main() {}
