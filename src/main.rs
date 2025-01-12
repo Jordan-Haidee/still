@@ -11,9 +11,7 @@ use std::process::{Command, Stdio};
 use daemonize::Daemonize;
 
 #[cfg(target_os = "linux")]
-use std::fs::{self, File};
-#[cfg(target_os = "linux")]
-use std::os::unix::fs::PermissionsExt;
+use std::fs::File;
 mod core;
 
 #[cfg(target_os = "windows")]
@@ -39,27 +37,15 @@ fn main() {
 
 #[cfg(target_os = "linux")]
 fn main() {
-    let daemon = Daemonize::new()
-        .pid_file("/tmp/daemon.pid")
-        .chown_pid_file(true)
-        .working_directory(".")
-        .umask(0o644)
-        .stdout(File::create("/tmp/daemon.out").expect("failed to create file!"))
-        .stderr(File::create("/tmp/daemon.err").expect("failed to create file!"));
-
-    let permissions = fs::Permissions::from_mode(0o644);
-    fs::set_permissions("/tmp/daemon.pid", permissions)
-        .expect("no permission to modify file authority!");
+    let args: Vec<String> = std::env::args().collect();
+    let pid: u32 = args[1].parse().expect("pid must be positive integers!");
+    let duration: u64 = core::parse_duration(args[2].as_str()).unwrap();
+    let stdout = File::create(format!("/tmp/{pid}.out")).expect("failed to create file!");
+    let stderr = File::create(format!("/tmp/{pid}.err")).expect("failed to create file!");
+    let daemon = Daemonize::new().umask(0o644).stdout(stdout).stderr(stderr);
 
     match daemon.start() {
-        Ok(_) => {
-            let args: Vec<String> = std::env::args().collect();
-            let pid: u32 = args[1].parse().expect("pid must be positive integers!");
-            let duration: u64 = core::parse_duration(args[2].as_str()).unwrap();
-            core::still(pid, duration)
-        }
-        Err(e) => {
-            eprintln!("failed to start daemon process: {}", e);
-        }
+        Ok(_) => core::still(pid, duration),
+        Err(e) => eprintln!("failed to start daemon process: {}", e),
     }
 }
