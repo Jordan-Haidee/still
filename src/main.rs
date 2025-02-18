@@ -9,9 +9,7 @@ use std::process::{Command, Stdio};
 use daemonize::Daemonize;
 
 #[cfg(target_os = "linux")]
-use std::fs::{self, File};
-#[cfg(target_os = "linux")]
-use std::os::unix::fs::PermissionsExt;
+use std::fs::File;
 mod core;
 use clap::{self, value_parser, Arg};
 fn parse_args() -> (u32, u64) {
