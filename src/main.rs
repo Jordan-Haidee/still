@@ -1,17 +1,6 @@
-#[cfg(target_os = "windows")]
-use std::env;
-#[cfg(target_os = "windows")]
-use std::os::windows::process::CommandExt;
-#[cfg(target_os = "windows")]
-use std::process::{Command, Stdio};
-
-#[cfg(target_os = "linux")]
-use daemonize::Daemonize;
-
-#[cfg(target_os = "linux")]
-use std::fs::File;
 mod core;
 use clap::{self, value_parser, Arg};
+
 fn parse_args() -> (u32, u64) {
     let matches = clap::Command::new("still")
         .about(
@@ -38,6 +27,10 @@ fn parse_args() -> (u32, u64) {
 
 #[cfg(target_os = "windows")]
 fn main() {
+    use std::env;
+    use std::os::windows::process::CommandExt;
+    use std::process::{Command, Stdio};
+
     const CREATE_NEW_PROCESS_GROUP: u32 = 0x00000200;
     const DETACHED_PROCESS: u32 = 0x00000008;
     const CREATE_NO_WINDOW: u32 = 0x08000000;
@@ -59,23 +52,13 @@ fn main() {
 
 #[cfg(target_os = "linux")]
 fn main() {
-    let daemon = Daemonize::new()
-        .pid_file("/tmp/daemon.pid")
-        .chown_pid_file(true)
-        .working_directory(".")
-        .umask(0o644)
-        .stdout(File::create("/tmp/daemon.out").expect("failed to create file!"))
-        .stderr(File::create("/tmp/daemon.err").expect("failed to create file!"));
+    use daemonize::Daemonize;
 
-    let permissions = fs::Permissions::from_mode(0o644);
-    fs::set_permissions("/tmp/daemon.pid", permissions)
-        .expect("no permission to modify file authority!");
+    let (pid, duration) = parse_args();
 
+    let daemon = Daemonize::new();
     match daemon.start() {
-        Ok(_) => {
-            let (pid, duration) = parse_args();
-            core::still(pid, duration)
-        }
+        Ok(_) => core::still(pid, duration),
         Err(e) => {
             eprintln!("failed to start daemon process: {}", e);
         }

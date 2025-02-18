@@ -1,5 +1,3 @@
-#[cfg(target_os = "linux")]
-use libc::{kill, pid_t, SIGCONT, SIGSTOP};
 #[cfg(target_os = "windows")]
 use ntapi::ntpsapi::{NtResumeProcess, NtSuspendProcess};
 #[cfg(target_os = "windows")]
@@ -9,6 +7,8 @@ use winapi::{
     shared::ntdef::NULL,
     um::{processthreadsapi::OpenProcess, winnt::PROCESS_SUSPEND_RESUME},
 };
+
+use libc::{kill, pid_t, SIGCONT, SIGSTOP};
 
 #[cfg(target_os = "windows")]
 fn suspend_process(pid: u32) -> bool {
