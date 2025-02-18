@@ -8,6 +8,7 @@ use winapi::{
     um::{processthreadsapi::OpenProcess, winnt::PROCESS_SUSPEND_RESUME},
 };
 
+#[cfg(target_os = "linux")]
 use libc::{kill, pid_t, SIGCONT, SIGSTOP};
 
 #[cfg(target_os = "windows")]
