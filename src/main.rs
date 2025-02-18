@@ -1,8 +1,6 @@
 #[cfg(target_os = "windows")]
 use std::env;
 #[cfg(target_os = "windows")]
-use std::env::args;
-#[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 #[cfg(target_os = "windows")]
 use std::process::{Command, Stdio};
@@ -15,6 +13,30 @@ use std::fs::{self, File};
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
 mod core;
+use clap::{self, value_parser, Arg};
+fn parse_args() -> (u32, u64) {
+    let matches = clap::Command::new("still")
+        .about(
+            "Still is a simple process alarm. It make specified process sleep now, and wake up after a period of time.",
+        )
+        .arg(
+            Arg::new("pid")
+                .required(true)
+                .value_parser(value_parser!(u32))
+                .help("the process id to be still.")
+                .index(1),
+        )
+        .arg(
+            Arg::new("duration")
+                .required(true).help("the duration to be still, such as 10s, 1m, 2h.")
+                .index(2),
+        )
+        .get_matches();
+    let pid = *matches.get_one::<u32>("pid").unwrap();
+    let duration = matches.get_one::<String>("duration").unwrap();
+    let duration = core::parse_duration(duration.as_str()).unwrap();
+    (pid, duration)
+}
 
 #[cfg(target_os = "windows")]
 fn main() {
@@ -22,12 +44,12 @@ fn main() {
     const DETACHED_PROCESS: u32 = 0x00000008;
     const CREATE_NO_WINDOW: u32 = 0x08000000;
 
-    let args: Vec<String> = args().collect();
+    let (pid, duration) = parse_args();
     let exe_path = env::current_exe().unwrap();
     let exe_dir = exe_path.parent().unwrap();
     Command::new(format!(r"{}/core.exe", exe_dir.display()))
-        .arg(args[1].as_str())
-        .arg(args[2].as_str())
+        .arg(pid.to_string())
+        .arg(duration.to_string())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .creation_flags(CREATE_NEW_PROCESS_GROUP)
@@ -53,9 +75,7 @@ fn main() {
 
     match daemon.start() {
         Ok(_) => {
-            let args: Vec<String> = std::env::args().collect();
-            let pid: u32 = args[1].parse().expect("pid must be positive integers!");
-            let duration: u64 = core::parse_duration(args[2].as_str()).unwrap();
+            let (pid, duration) = parse_args();
             core::still(pid, duration)
         }
         Err(e) => {
