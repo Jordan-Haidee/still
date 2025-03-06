@@ -1,8 +1,8 @@
+![logo](assets/logo.svg)
 # Still
 Still is a simple process alarm. It make specified process sleep now, and wake up
 after a period of time.
 
-![banner](assets/banner.png)
 
 ## Usage
 ```shell
